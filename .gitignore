@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 data/*
 !data/.gitkeep
+!data/train.csv
 outputs/
 .DS_Store
 
