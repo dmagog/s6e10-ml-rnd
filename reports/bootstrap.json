@@ -1,0 +1,12 @@
+{
+  "point_auc": 0.9215555399409435,
+  "lower": 0.9208436275143245,
+  "upper": 0.9222908024790821,
+  "confidence": 0.95,
+  "repetitions": 1000,
+  "seed": 20261108,
+  "method": "stratified_percentile_fixed_oof",
+  "n_positive": 310339,
+  "n_negative": 389296,
+  "oof_sha256": "9973e75c8fa1cf3083939fc935ad3c2cbb65a9a50c5cc0eeb91c2f6f855c86fe"
+}

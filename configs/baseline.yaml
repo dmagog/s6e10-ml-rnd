@@ -1,0 +1,9 @@
+data_path: data/train.csv
+output_dir: outputs/baseline
+seed: 42
+n_splits: 5
+threshold: 0.5
+model:
+  C: 1.0
+  solver: lbfgs
+  max_iter: 500
