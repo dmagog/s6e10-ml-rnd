@@ -1,0 +1,4 @@
+id,error_type,satisfaction,score,Class,Type of Travel,Inflight wifi service,Seat comfort,Inflight entertainment
+31123,FP,False,0.7069278608935502,Business,Business travel,3,3,4
+556049,FN,True,0.20306681334235566,Eco,Business travel,4,1,5
+369131,FN,True,5.246863257093321e-05,Eco,Business travel,1,1,2

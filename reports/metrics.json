@@ -1,0 +1,93 @@
+{
+  "input_sha256": "2313b65c74e6994f01c2628aae82d2f97aa6f74a81950172ff83864837c98b36",
+  "n": 699635,
+  "class_counts": {
+    "false": 389296,
+    "true": 310339
+  },
+  "missing": {
+    "Arrival Delay in Minutes": 292
+  },
+  "full_duplicate_rows_excluding_id": 0,
+  "same_features_groups": 0,
+  "same_features_rows": 0,
+  "conflicting_target_groups": 0,
+  "conflicting_target_rows": 0,
+  "folds": [
+    {
+      "fold": 1,
+      "n_train": 559708,
+      "n_validation": 139927,
+      "roc_auc": 0.9224171650457147,
+      "average_precision": 0.9100676835749375,
+      "iterations": 22,
+      "seconds": 9.63
+    },
+    {
+      "fold": 2,
+      "n_train": 559708,
+      "n_validation": 139927,
+      "roc_auc": 0.9214171709639392,
+      "average_precision": 0.9089251506839636,
+      "iterations": 22,
+      "seconds": 9.76
+    },
+    {
+      "fold": 3,
+      "n_train": 559708,
+      "n_validation": 139927,
+      "roc_auc": 0.921403220572044,
+      "average_precision": 0.9097225373124321,
+      "iterations": 22,
+      "seconds": 9.04
+    },
+    {
+      "fold": 4,
+      "n_train": 559708,
+      "n_validation": 139927,
+      "roc_auc": 0.92127398658827,
+      "average_precision": 0.9074592732269083,
+      "iterations": 22,
+      "seconds": 8.96
+    },
+    {
+      "fold": 5,
+      "n_train": 559708,
+      "n_validation": 139927,
+      "roc_auc": 0.9212644765000017,
+      "average_precision": 0.9086960174433191,
+      "iterations": 20,
+      "seconds": 9.38
+    }
+  ],
+  "mean_fold_auc": 0.921555203933994,
+  "std_fold_auc_population": 0.0004355995035953061,
+  "oof_auc": 0.9215555399409435,
+  "oof_average_precision": 0.9089676408176602,
+  "confusion_matrix_rows_true_columns_pred": [
+    [
+      351511,
+      37785
+    ],
+    [
+      47335,
+      263004
+    ]
+  ],
+  "threshold": 0.5,
+  "seconds_total": 65.76,
+  "python": "3.12.0",
+  "sklearn": "1.6.1",
+  "input_filename": "train.csv",
+  "output_directory_name": "notebook",
+  "experiment_config": {
+    "seed": 42,
+    "n_splits": 5,
+    "threshold": 0.5,
+    "model": {
+      "C": 1.0,
+      "solver": "lbfgs",
+      "max_iter": 500
+    }
+  }
+}
