@@ -1,6 +1,9 @@
 """Собрать небольшие проверяемые таблицы и график после полного прогона."""
 from pathlib import Path
+import argparse
 import shutil
+import subprocess
+import sys
 
 import matplotlib
 matplotlib.use('Agg')
@@ -9,8 +12,13 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 
-source = Path('outputs/hw2')
-out = Path('reports/hw2')
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--output', default='outputs/hw2', help='Каталог завершённого прогона')
+parser.add_argument('--report-dir', help='Каталог отчёта; по умолчанию report внутри каталога прогона')
+args = parser.parse_args()
+source = Path(args.output)
+out = Path(args.report_dir) if args.report_dir else source / 'report'
+subprocess.run([sys.executable, '-m', 'src.verify_hw2', '--output', str(source)], check=True)
 out.mkdir(parents=True, exist_ok=True)
 for name in ['summary.csv', 'folds.csv', 'comparisons.csv', 'manifest.json']:
     shutil.copyfile(source / name, out / name)
@@ -32,9 +40,11 @@ pd.DataFrame(subsets).to_csv(out / 'slices.csv', index=False)
 plt.rcParams.update({'axes.spines.top': False, 'axes.spines.right': False, 'font.size': 10})
 fig, ax = plt.subplots(1, 2, figsize=(12, 4.5))
 colors = ['#8291a9', '#2456a6', '#4182bc', '#5ba1b1', '#d97842']
-bars = ax[0].bar(summary.index, summary['mean_fold_auc'], color=colors)
-ax[0].bar_label(bars, labels=[f'{v:.5f}' for v in summary['mean_fold_auc']], padding=3)
-ax[0].set_ylim(.89, .98)
+ax[0].scatter(summary.index, summary['mean_fold_auc'], color=colors, s=65)
+for x, value in zip(summary.index, summary['mean_fold_auc']):
+    ax[0].annotate(f'{value:.5f}', (x, value), xytext=(0, 8),
+                   textcoords='offset points', ha='center')
+ax[0].set_ylim(.915, .963)
 ax[0].set(title='Средний ROC-AUC по фолдам', ylabel='ROC-AUC', xlabel='Эксперимент')
 names = ['both_features', 'ablate_A', 'ablate_B']
 labels = ['A+B против исходных', 'Вклад A при наличии B', 'Вклад B при наличии A']

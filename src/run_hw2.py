@@ -72,6 +72,8 @@ def main():
     path = Path(args.data or cfg['data_path'])
     out = Path(args.output or cfg['output_dir'])
     out.mkdir(parents=True, exist_ok=True)
+    if any(out.iterdir()):
+        raise ValueError(f'Каталог {out} не пуст. Выберите новый каталог через --output.')
     reference = json.loads(Path('reports/metrics.json').read_text())
     baseline_oof_sha = json.loads(Path('reports/bootstrap.json').read_text())['oof_sha256']
     if file_sha(path) != reference['input_sha256']:
