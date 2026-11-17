@@ -36,7 +36,8 @@ for experiment in ['E0', 'E1', 'E4']:
         subsets.append({'experiment': experiment, 'type_of_travel': name, 'n': int(mask.sum()),
                         'positive_rate': float(pred.loc[mask, 'target'].mean()),
                         'pooled_oof_auc': float(roc_auc_score(pred.loc[mask, 'target'], pred.loc[mask, 'score']))})
-pd.DataFrame(subsets).to_csv(out / 'slices.csv', index=False)
+slices = pd.DataFrame(subsets)
+slices.to_csv(out / 'slices.csv', index=False)
 plt.rcParams.update({'axes.spines.top': False, 'axes.spines.right': False, 'font.size': 10})
 fig, ax = plt.subplots(1, 2, figsize=(12, 4.5))
 colors = ['#8291a9', '#2456a6', '#4182bc', '#5ba1b1', '#d97842']
@@ -44,7 +45,9 @@ ax[0].scatter(summary.index, summary['mean_fold_auc'], color=colors, s=65)
 for x, value in zip(summary.index, summary['mean_fold_auc']):
     ax[0].annotate(f'{value:.5f}', (x, value), xytext=(0, 8),
                    textcoords='offset points', ha='center')
-ax[0].set_ylim(.915, .963)
+low, high = summary['mean_fold_auc'].min(), summary['mean_fold_auc'].max()
+margin = max((high - low) * 0.16, 0.002)
+ax[0].set_ylim(max(0, low - margin), min(1, high + margin))
 ax[0].set(title='Средний ROC-AUC по фолдам', ylabel='ROC-AUC', xlabel='Эксперимент')
 names = ['both_features', 'ablate_A', 'ablate_B']
 labels = ['A+B против исходных', 'Вклад A при наличии B', 'Вклад B при наличии A']
@@ -60,4 +63,34 @@ ax[1].set(title='Парная разница ROC-AUC', xlabel='Разница ×
 fig.tight_layout()
 fig.savefig(out / 'comparison.png', dpi=150)
 plt.close(fig)
-print('Отчётные таблицы и график обновлены.')
+
+# Срезы рассчитаны по объединённым OOF-прогнозам; точки не являются интервалами.
+fig, ax = plt.subplots(figsize=(9, 4))
+groups = ['Business travel', 'Personal Travel']
+models = [('E0', 'Логистическая регрессия (E0)', '#8291a9', -0.18),
+          ('E1', 'LightGBM (E1)', '#2456a6', 0),
+          ('E4', 'LightGBM + A + B (E4)', '#d97842', 0.18)]
+for experiment, label, color, offset in models:
+    values = [slices.query('experiment == @experiment and type_of_travel == @group').iloc[0]
+              for group in groups]
+    ys = np.arange(len(groups)) + offset
+    xs = [row['pooled_oof_auc'] for row in values]
+    ax.scatter(xs, ys, color=color, s=48, label=label, zorder=3)
+    for x, y in zip(xs, ys):
+        ax.annotate(f'{x:.4f}', (x, y), xytext=(6, 0),
+                    textcoords='offset points', va='center', fontsize=9)
+labels = []
+for group, name in zip(groups, ['Деловые поездки', 'Личные поездки']):
+    row = slices[slices.type_of_travel == group].iloc[0]
+    labels.append(f"{name}\nn = {int(row['n']):,}; положительных = {row['positive_rate']:.1%}")
+ax.set_yticks(range(len(groups)), labels)
+ax.invert_yaxis()
+ax.set_xlim(0.5, 1.0)
+ax.set_xlabel('ROC-AUC по объединённым OOF-прогнозам')
+ax.set_title('Качество ранжирования по типу поездки')
+ax.grid(axis='x', color='#e1e5ea', linewidth=0.8)
+ax.legend(loc='lower center', bbox_to_anchor=(0.5, -0.45), ncol=3, frameon=False, fontsize=9)
+fig.tight_layout()
+fig.savefig(out / 'travel_slices.png', dpi=150, bbox_inches='tight')
+plt.close(fig)
+print('Отчётные таблицы и графики обновлены.')
