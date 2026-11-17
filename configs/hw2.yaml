@@ -1,0 +1,28 @@
+data_path: data/train.csv
+output_dir: outputs/hw2
+n_splits: 5
+split_seed: 42
+features:
+  A:
+    name: wifi_x_online_boarding
+    left: Inflight wifi service
+    right: Online boarding
+  B:
+    name: seat_x_entertainment
+    left: Seat comfort
+    right: Inflight entertainment
+lightgbm:
+  n_estimators: 250
+  learning_rate: 0.05
+  num_leaves: 31
+  max_depth: -1
+  min_child_samples: 100
+  subsample: 1.0
+  colsample_bytree: 1.0
+  reg_alpha: 0.0
+  reg_lambda: 0.0
+  random_state: 42
+  n_jobs: 2
+  deterministic: true
+  force_col_wise: true
+  verbosity: -1

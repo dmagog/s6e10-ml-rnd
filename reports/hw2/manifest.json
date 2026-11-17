@@ -1,0 +1,77 @@
+{
+  "input_sha256": "2313b65c74e6994f01c2628aae82d2f97aa6f74a81950172ff83864837c98b36",
+  "baseline_oof_sha256": "9973e75c8fa1cf3083939fc935ad3c2cbb65a9a50c5cc0eeb91c2f6f855c86fe",
+  "lightgbm_version": "4.6.0",
+  "config": {
+    "data_path": "data/train.csv",
+    "output_dir": "outputs/hw2",
+    "n_splits": 5,
+    "split_seed": 42,
+    "features": {
+      "A": {
+        "name": "wifi_x_online_boarding",
+        "left": "Inflight wifi service",
+        "right": "Online boarding"
+      },
+      "B": {
+        "name": "seat_x_entertainment",
+        "left": "Seat comfort",
+        "right": "Inflight entertainment"
+      }
+    },
+    "lightgbm": {
+      "n_estimators": 250,
+      "learning_rate": 0.05,
+      "num_leaves": 31,
+      "max_depth": -1,
+      "min_child_samples": 100,
+      "subsample": 1.0,
+      "colsample_bytree": 1.0,
+      "reg_alpha": 0.0,
+      "reg_lambda": 0.0,
+      "random_state": 42,
+      "n_jobs": 2,
+      "deterministic": true,
+      "force_col_wise": true,
+      "verbosity": -1
+    }
+  },
+  "partitions": [
+    {
+      "fold": 1,
+      "train_ids_sha256": "39087842f7cd0ab1586bc92e1edbc0c7a7ff0617257f6326caddc12221fdbe73",
+      "val_ids_sha256": "91378d0ab34e7b0ef553f834dbe9cef83f188576fafd6b06d0a14b901a942a8e",
+      "n_train": 559708,
+      "n_val": 139927
+    },
+    {
+      "fold": 2,
+      "train_ids_sha256": "a109c3f2fbe46f48ea6a2f4321a5f61430e0a837033b207f63adf068c1199764",
+      "val_ids_sha256": "fe0ffac250bad7b11dbfd21b9cb3dc5e41879284c7a3f4e22436a1e7b250c0ce",
+      "n_train": 559708,
+      "n_val": 139927
+    },
+    {
+      "fold": 3,
+      "train_ids_sha256": "d8dd325c8f367bc1c893c2777eb38e35b759dd21af166838d8558f4b17975594",
+      "val_ids_sha256": "611930fa3f8dd05973f020d60d218e778b10b4b20bf24bfe0859c8b88395268b",
+      "n_train": 559708,
+      "n_val": 139927
+    },
+    {
+      "fold": 4,
+      "train_ids_sha256": "775d3214eed4a49147039231e1e171ad5fd004285466c87c860f132c26f66a2f",
+      "val_ids_sha256": "8ce656c0dfcdfb918afca75ae69162cef7224f94fe6234ad3d317a36d3adb73c",
+      "n_train": 559708,
+      "n_val": 139927
+    },
+    {
+      "fold": 5,
+      "train_ids_sha256": "94b1e1bb44398d04d57da2648eee30f82b6f193550a00577878fc9e8d8f5ca25",
+      "val_ids_sha256": "0a0c51f31e91fa54d59fbe3c37ab6bf76b2101b1b24f6dcc20077291b3477cc9",
+      "n_train": 559708,
+      "n_val": 139927
+    }
+  ],
+  "python": "3.12.0"
+}
