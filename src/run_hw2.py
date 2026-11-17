@@ -22,7 +22,7 @@ from src.train import CATS, NUMS, build_pipeline
 
 
 class AddInteractions(BaseEstimator, TransformerMixin):
-    """Построчные произведения оценок без статистик по данным и меток."""
+    """Построчные произведения оценок без использования меток и статистик по данным."""
     def __init__(self, definitions):
         self.definitions = definitions
 

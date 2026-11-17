@@ -55,7 +55,7 @@ def main():
         if not (np.array_equal(pred.id, df.id) and np.array_equal(pred.target, y) and np.array_equal(pred.fold, folded)):
             raise ValueError(f'{name}: строки, метки или фолды не совпали')
         if not np.isfinite(pred.score).all() or not pred.score.between(0, 1).all():
-            raise ValueError(f'{name}: некорректные скоры')
+            raise ValueError(f'{name}: некорректные оценки модели')
         for i in range(1, cfg['n_splits'] + 1):
             mask = folded == i
             row = folds[(folds.experiment == name) & (folds.fold == i)]
