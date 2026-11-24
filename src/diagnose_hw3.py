@@ -7,7 +7,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
-from matplotlib.ticker import FuncFormatter
+from matplotlib.ticker import FuncFormatter, MultipleLocator
 import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_auc_score
@@ -90,24 +90,46 @@ def diagnose(data, pred, cfg):
 
 def figures(out, slices, fold, reference_seed):
     plt.rcParams.update({'axes.spines.right': False, 'axes.spines.top': False, 'font.size': 10})
-    fig, axes = plt.subplots(1, 2, figsize=(10, 3.9), layout='constrained')
-    for ax, (column, _), title in zip(axes, GROUPS, ['Тип поездки', 'Класс обслуживания']):
-        part = slices[slices.slice == column]
-        ax.errorbar(
-            part.mean_fold_auc, part.group,
-            xerr=[part.mean_fold_auc - part.min_fold_auc, part.max_fold_auc - part.mean_fold_auc],
-            fmt='o', color='#2456a6', ecolor='#778aab', elinewidth=1.5, capsize=4, zorder=3,
-        )
-        ax.set(title=title, xlabel='Средний ROC-AUC по фолдам', xlim=(min(0.7, slices.min_fold_auc.min() - 0.02), 1.0))
-        ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{x:.2f}'.replace('.', ',')))
+    fig, (auc_ax, error_ax) = plt.subplots(1, 2, figsize=(9.2, 4.5), sharey=True, layout='constrained')
+    rows = np.arange(len(slices), dtype=float)
+    rows[slices.slice.eq('Class')] += .55
+    labels = [
+        f'{r.group} поездка' if r.slice == 'Type of Travel' else r.group
+        for r in slices.itertuples()
+    ]
+    auc_ax.errorbar(
+        slices.mean_fold_auc, rows,
+        xerr=[slices.mean_fold_auc - slices.min_fold_auc, slices.max_fold_auc - slices.mean_fold_auc],
+        fmt='o', color='#2456a6', ecolor='#778aab', elinewidth=1.5, capsize=4, zorder=3,
+    )
+    for y, value in zip(rows, slices.mean_fold_auc):
+        auc_ax.annotate(f'{value:.4f}'.replace('.', ','), (value, y), xytext=(-1, 9),
+                        textcoords='offset points', ha='center', fontsize=9)
+    auc_ax.set(title='Ранжирование', xlabel='ROC-AUC, среднее по фолдам',
+               xlim=(max(0, slices.min_fold_auc.min() - .04), min(1, slices.max_fold_auc.max() + .04)))
+    auc_ax.xaxis.set_major_locator(MultipleLocator(.05))
+    auc_ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{x:.2f}'.replace('.', ',')))
+    auc_ax.set_yticks(rows, labels)
+    auc_ax.set_ylim(rows[-1] + .5, -.65)
+
+    for metric, label, offset, color, marker in [
+        ('fnr', 'Пропуск (FNR)', -.17, '#70469b', 'o'),
+        ('fpr', 'Ложное срабатывание (FPR)', .17, '#26765b', 's'),
+    ]:
+        values = slices[metric] * 100
+        error_ax.scatter(values, rows + offset, color=color, marker=marker, s=32, label=label, zorder=3)
+        for y, value in zip(rows, values):
+            error_ax.annotate(f'{value:.1f}%'.replace('.', ','), (value, y + offset), xytext=(5, 0),
+                              textcoords='offset points', va='center', fontsize=9, color=color)
+    error_ax.set(title='Ошибки при пороге 0,5', xlabel='Доля внутри фактического класса, %',
+                 xlim=(-1.5, min(107, max(76, float(slices[['fnr', 'fpr']].max().max()) * 100 + 9))))
+    error_ax.set_xticks([0, 20, 40, 60])
+    error_ax.legend(loc='upper center', bbox_to_anchor=(.5, -.14), frameon=False, fontsize=9)
+    for ax in (auc_ax, error_ax):
+        ax.axhline((rows[1] + rows[2]) / 2, color='#d0d7df', linewidth=1)
         ax.grid(axis='x', color='#e4e9ed', zorder=0)
-        for label, v in zip(part.group, part.mean_fold_auc):
-            ax.annotate(f'{v:.4f}'.replace('.', ','), (v, label), xytext=(-5, 10),
-                        textcoords='offset points', ha='right', fontsize=9)
-        ax.margins(y=.22)
-    fig.text(0.5, 0.02, 'Точка: среднее. Отрезок: минимум и максимум по пяти фолдам.',
-             ha='center', fontsize=9)
-    fig.get_layout_engine().set(rect=(0, 0.07, 1, 0.93))
+    fig.get_layout_engine().set(rect=(0, .05, 1, .95))
+    fig.text(.34, .035, 'Отрезки: минимум и максимум по пяти фолдам.', ha='center', fontsize=9)
     fig.savefig(out / 'slices.png', dpi=150)
     plt.close(fig)
 
