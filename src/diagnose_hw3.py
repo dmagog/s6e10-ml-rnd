@@ -105,7 +105,7 @@ def figures(out, slices, fold, reference_seed):
     for y, value in zip(rows, slices.mean_fold_auc):
         auc_ax.annotate(f'{value:.4f}'.replace('.', ','), (value, y), xytext=(-1, 9),
                         textcoords='offset points', ha='center', fontsize=9)
-    auc_ax.set(title='Ранжирование', xlabel='ROC-AUC, среднее по фолдам',
+    auc_ax.set(title='Ранжирование', xlabel='Средний ROC-AUC по фолдам',
                xlim=(max(0, slices.min_fold_auc.min() - .04), min(1, slices.max_fold_auc.max() + .04)))
     auc_ax.xaxis.set_major_locator(MultipleLocator(.05))
     auc_ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{x:.2f}'.replace('.', ',')))
@@ -113,15 +113,15 @@ def figures(out, slices, fold, reference_seed):
     auc_ax.set_ylim(rows[-1] + .5, -.65)
 
     for metric, label, offset, color, marker in [
-        ('fnr', 'Пропуск (FNR)', -.17, '#70469b', 'o'),
-        ('fpr', 'Ложное срабатывание (FPR)', .17, '#26765b', 's'),
+        ('fnr', 'Пропуски положительных ответов (FNR)', -.17, '#70469b', 'o'),
+        ('fpr', 'Ложные срабатывания (FPR)', .17, '#26765b', 's'),
     ]:
         values = slices[metric] * 100
         error_ax.scatter(values, rows + offset, color=color, marker=marker, s=32, label=label, zorder=3)
         for y, value in zip(rows, values):
             error_ax.annotate(f'{value:.1f}%'.replace('.', ','), (value, y + offset), xytext=(5, 0),
                               textcoords='offset points', va='center', fontsize=9, color=color)
-    error_ax.set(title='Ошибки при пороге 0,5', xlabel='Доля внутри фактического класса, %',
+    error_ax.set(title='Ошибки при пороге 0,5', xlabel='Доля ошибок внутри фактического класса, %',
                  xlim=(-1.5, min(107, max(76, float(slices[['fnr', 'fpr']].max().max()) * 100 + 9))))
     error_ax.set_xticks([0, 20, 40, 60])
     error_ax.legend(loc='upper center', bbox_to_anchor=(.5, -.14), frameon=False, fontsize=9)
@@ -129,7 +129,7 @@ def figures(out, slices, fold, reference_seed):
         ax.axhline((rows[1] + rows[2]) / 2, color='#d0d7df', linewidth=1)
         ax.grid(axis='x', color='#e4e9ed', zorder=0)
     fig.get_layout_engine().set(rect=(0, .05, 1, .95))
-    fig.text(.34, .035, 'Отрезки: минимум и максимум по пяти фолдам.', ha='center', fontsize=9)
+    fig.text(.34, .035, 'Отрезки показывают минимум и максимум по фолдам.', ha='center', fontsize=9)
     fig.savefig(out / 'slices.png', dpi=150)
     plt.close(fig)
 
@@ -152,7 +152,7 @@ def figures(out, slices, fold, reference_seed):
     axes[1].plot(delta.columns * 100, delta.mean(), color='#2456a6', marker='D', linewidth=2.2,
                  label='Среднее')
     axes[1].set(title='Размер обучающей выборки', xlabel='Доля обучающей части, %',
-                ylabel='Разница ROC-AUC относительно 100%')
+                ylabel='Δ ROC-AUC к полной обучающей части')
     axes[1].legend(loc='lower right', frameon=False, fontsize=9)
     axes[1].set_xticks([20, 50, 100])
     for ax in axes:
