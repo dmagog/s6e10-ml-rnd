@@ -6,6 +6,7 @@ from pathlib import Path
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 from matplotlib.ticker import FuncFormatter
 import numpy as np
 import pandas as pd
@@ -89,11 +90,14 @@ def diagnose(data, pred, cfg):
 
 def figures(out, slices, fold, reference_seed):
     plt.rcParams.update({'axes.spines.right': False, 'axes.spines.top': False, 'font.size': 10})
-    fig, axes = plt.subplots(1, 2, figsize=(10, 3.5), layout='constrained')
+    fig, axes = plt.subplots(1, 2, figsize=(10, 3.9), layout='constrained')
     for ax, (column, _), title in zip(axes, GROUPS, ['Тип поездки', 'Класс обслуживания']):
         part = slices[slices.slice == column]
-        ax.scatter(part.mean_fold_auc, part.group, color='#2456a6', s=48, zorder=3)
-        ax.hlines(part.group, part.min_fold_auc, part.max_fold_auc, color='#778aab', linewidth=2)
+        ax.errorbar(
+            part.mean_fold_auc, part.group,
+            xerr=[part.mean_fold_auc - part.min_fold_auc, part.max_fold_auc - part.mean_fold_auc],
+            fmt='o', color='#2456a6', ecolor='#778aab', elinewidth=1.5, capsize=4, zorder=3,
+        )
         ax.set(title=title, xlabel='Средний ROC-AUC по фолдам', xlim=(min(0.7, slices.min_fold_auc.min() - 0.02), 1.0))
         ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{x:.2f}'.replace('.', ',')))
         ax.grid(axis='x', color='#e4e9ed', zorder=0)
@@ -101,6 +105,9 @@ def figures(out, slices, fold, reference_seed):
             ax.annotate(f'{v:.4f}'.replace('.', ','), (v, label), xytext=(-5, 10),
                         textcoords='offset points', ha='right', fontsize=9)
         ax.margins(y=.22)
+    fig.text(0.5, 0.02, 'Точка: среднее. Отрезок: минимум и максимум по пяти фолдам.',
+             ha='center', fontsize=9)
+    fig.get_layout_engine().set(rect=(0, 0.07, 1, 0.93))
     fig.savefig(out / 'slices.png', dpi=150)
     plt.close(fig)
 
@@ -111,12 +118,20 @@ def figures(out, slices, fold, reference_seed):
         axes[0].scatter(j, group.roc_auc.mean(), color='#2456a6', marker='D', s=55)
     axes[0].set_xticks(range(seed_results.split_seed.nunique()), seed_results.split_seed.unique())
     axes[0].set(title='Смена разбиения', xlabel='Seed разбиения', ylabel='ROC-AUC')
+    axes[0].legend(handles=[
+        Line2D([], [], color='#8c99a6', marker='o', linestyle='', label='Фолд'),
+        Line2D([], [], color='#2456a6', marker='D', linestyle='', label='Среднее'),
+    ], loc='lower right', frameon=False, fontsize=9)
     sizes = fold[fold.split_seed == reference_seed].pivot(index='fold', columns='train_fraction', values='roc_auc')
     delta = sizes.sub(sizes[1.0], axis=0)
-    for _, row in delta.iterrows():
-        axes[1].plot(delta.columns * 100, row, color='#8c99a6', alpha=.55, marker='o')
-    axes[1].plot(delta.columns * 100, delta.mean(), color='#2456a6', marker='D', linewidth=2.2)
-    axes[1].set(title='Размер обучающей выборки', xlabel='Доля train, %', ylabel='Разница ROC-AUC к 100% train')
+    for i, (_, row) in enumerate(delta.iterrows()):
+        axes[1].plot(delta.columns * 100, row, color='#8c99a6', alpha=.55, marker='o',
+                     label='Фолд' if i == 0 else None)
+    axes[1].plot(delta.columns * 100, delta.mean(), color='#2456a6', marker='D', linewidth=2.2,
+                 label='Среднее')
+    axes[1].set(title='Размер обучающей выборки', xlabel='Доля обучающей части, %',
+                ylabel='Разница ROC-AUC относительно 100%')
+    axes[1].legend(loc='lower right', frameon=False, fontsize=9)
     axes[1].set_xticks([20, 50, 100])
     for ax in axes:
         ax.grid(axis='y', color='#e4e9ed')
@@ -130,8 +145,12 @@ def main():
     cli.add_argument('--data', type=Path, default=Path('data/train.csv'))
     cli.add_argument('--run', type=Path, default=Path('outputs/hw3'))
     cli.add_argument('--report', type=Path)
+    cli.add_argument('--check', action='store_true', help='Сверить рассчитанные таблицы с опубликованными.')
     args = cli.parse_args()
     out = args.report or args.run / 'report'
+    published = Path('reports/hw3')
+    if args.check and out.resolve() == published.resolve():
+        cli.error('Для сверки сохраните новый отчёт в отдельный каталог.')
     manifest = json.loads((args.run / 'manifest.json').read_text())
     pred_path = args.run / 'reference_oof.csv'
     if file_sha(args.data) != manifest['input_sha256'] or file_sha(pred_path) != manifest['report_oof_sha256']:
@@ -152,11 +171,23 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     counts, examples, local_examples, slices, slice_folds = diagnose(data, pred, cfg)
     local_examples.to_csv(args.run / 'error_examples_local.csv', index=False)
-    for name, table in [('error_counts', counts), ('error_examples', examples), ('slices', slices),
-                        ('slice_folds', slice_folds), ('robustness_folds', fold)]:
+    tables = [('error_counts', counts), ('error_examples', examples), ('slices', slices),
+              ('slice_folds', slice_folds), ('robustness_folds', fold)]
+    for name, table in tables:
         table.to_csv(out / f'{name}.csv', index=False)
     figures(out, slices, fold, seed42)
     print(f'Таблицы и графики сохранены в {out}.')
+    if args.check:
+        for name, _ in tables:
+            filename = f'{name}.csv'
+            try:
+                pd.testing.assert_frame_equal(
+                    pd.read_csv(out / filename), pd.read_csv(published / filename),
+                    check_exact=False, rtol=0, atol=cfg['reference_auc_tolerance'],
+                )
+            except AssertionError as exc:
+                raise SystemExit(f'Таблица {filename} отличается от опубликованной.\n{exc}') from exc
+        print('Все пять таблиц совпали с опубликованными в пределах допуска.')
 
 
 if __name__ == '__main__':
