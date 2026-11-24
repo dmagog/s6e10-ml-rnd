@@ -1,0 +1,5 @@
+example,error,band,target,score,travel,service_class,seat_band,entertainment_band,same_pattern_errors,n_errors,same_pattern_correct,n_correct,boarding_band,boarding_errors,boarding_correct
+1,FP,Около порога,0,0.545,Деловая,Business,4–5,4–5,872,1926,12514,73814,,,
+2,FP,Край шкалы,0,0.951,Деловая,Business,4–5,4–5,9652,11247,12514,73814,,,
+3,FN,Около порога,1,0.452,Деловая,Business,3,0–2,26,1526,420,241232,,,
+4,FN,Край шкалы,1,0.04,Личная,Eco,3,3,833,5509,1000,6349,3,1715,151
