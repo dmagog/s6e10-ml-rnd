@@ -1,0 +1,9 @@
+experiment: E3
+features: [B]
+split_seeds: [42, 13, 73]
+train_fractions: [1.0, 0.5, 0.2]
+subset_seed: 20261124
+threshold: 0.5
+near_bounds: [0.4, 0.6]
+extreme_bounds: [0.1, 0.9]
+reference_auc_tolerance: 0.000001
